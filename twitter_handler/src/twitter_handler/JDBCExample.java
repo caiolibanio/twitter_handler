@@ -1,6 +1,9 @@
 package twitter_handler;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -13,6 +16,8 @@ import org.json.JSONObject;
 public class JDBCExample {
 	
 	static Connection connection = null;
+	
+	static PrintWriter writer = null;
 
 	public static void main(String[] argv) {
 
@@ -33,24 +38,6 @@ public class JDBCExample {
 		}
 
 		System.out.println("PostgreSQL JDBC Driver Registered!");
-
-//		Connection connection = null;
-
-//		try {
-//
-//			connection = DriverManager.getConnection(
-//					"jdbc:postgresql://127.0.0.1:5432/tweets", "postgres",
-//					"admin");
-//
-//		} catch (SQLException e) {
-//
-//			System.out.println("Connection Failed! Check output console");
-//			e.printStackTrace();
-//			return;
-//
-//		}
-
-		
 			
 			
 			try {
@@ -67,10 +54,11 @@ public class JDBCExample {
 		
 		Statement st = null;
 		ResultSet rs = null;
-		int countOK = 0;
+		int countOK = 89778;
 		int countFail = 0;
+		int countStep = 1000000;
 		
-		for(int i = 0; i < 19456798; i++){
+		for(int i = 89778; i < 19456798; i = i + 1000){
 			try 
 		    {
 				connection = DriverManager.getConnection(
@@ -78,7 +66,7 @@ public class JDBCExample {
 				"admin");	
 				connection.setAutoCommit(false);
 		      st = connection.createStatement();
-		      rs = st.executeQuery("SELECT tid, json FROM tweets_london_raw_original ORDER BY tid LIMIT 1 OFFSET " + i);
+		      rs = st.executeQuery("SELECT tid, json FROM tweets_london_raw_original ORDER BY tid LIMIT 1000 OFFSET " + i);
 		      while ( rs.next() )
 		      {
 		        
@@ -88,7 +76,7 @@ public class JDBCExample {
 		        boolean key = checkTweet(tweet);
 		        
 		        if(key){
-		        	insert(tweet, connection);
+		        	insert(tweet);
 		        	countOK++;
 		        	
 		        }
@@ -105,6 +93,12 @@ public class JDBCExample {
 			    connection.commit();
 		      	connection.close();
 		      	
+		      	if(countStep == countOK){
+		      		countStep = countStep + 1000000;
+		      		System.out.println("CountOK esta em: " + countOK);
+		      		
+		      	}
+		      	
 		    }
 			
 		}
@@ -119,32 +113,25 @@ public class JDBCExample {
 			JSONObject jsonObject = jsonArray.getJSONObject(0).getJSONObject("coordinates");  // get jsonObject @ i position 
 			return true;
 		} catch (JSONException e) {
-			System.out.println("Esta linha nao possui coordenadas geograficas!");
+//			System.out.println("Esta linha nao possui coordenadas geograficas!");
 		}
 		return false;
 	}
 	
-	public static void insert(Tweet tweet, Connection conn) throws SQLException{
-//		this.conn = DriverManager
-//		        .getConnection("jdbc:postgresql://localhost:5432/geosen",
-//		        "geosen", "geosen");
-//		conn.setAutoCommit(false);
+	public static void insert(Tweet tweet) throws SQLException{
 		
-//		String place = "";
-//		if(news.getPlace() == null){
-//			place = "NULL";
-//		}else{
-//			place = "'" + news.getPlace() + "'";
-//		}
-		
-		Statement stmt = conn.createStatement();
+		Statement stmt = connection.createStatement();
 		String sql = "INSERT INTO geo_tweets" + "(" + "tid" + ", " + "json" + ") "
 	               + "VALUES (" + "'" + tweet.getTid() + "'" + ", " +"$token$" + tweet.getJson() + "$token$" + ");";
+		
 		stmt.executeUpdate(sql);
 		stmt.close();
-//		conn.commit();
-//		conn.close();
+
 		
+	}
+	
+	public static void openFile() throws FileNotFoundException, UnsupportedEncodingException{
+		writer = new PrintWriter("the-file-name.txt", "UTF-8");
 	}
 		
 }
