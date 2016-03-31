@@ -54,11 +54,14 @@ public class JDBCExample {
 		
 		Statement st = null;
 		ResultSet rs = null;
-		int countOK = 89778;
+		int countOK = 0;
 		int countFail = 0;
 		int countStep = 1000000;
+		boolean lastLine = false;
+		int step1 = 1;
+		int step2 = 1000;
 		
-		for(int i = 89778; i < 19456798; i = i + 1000){
+		while(!lastLine){
 			try 
 		    {
 				connection = DriverManager.getConnection(
@@ -66,15 +69,20 @@ public class JDBCExample {
 				"admin");	
 				connection.setAutoCommit(false);
 		      st = connection.createStatement();
-		      rs = st.executeQuery("SELECT tid, json FROM tweets_london_raw_original ORDER BY tid LIMIT 1000 OFFSET " + i);
+		      rs = st.executeQuery("select * from tweets_london_raw_original where tid between " + step1 + " and " + step2 + " order by tid");
+		      step1 = step1 + 1000;
+		      step2 = step2 + 1000;
 		      while ( rs.next() )
 		      {
 		        
 		        Long tid = rs.getLong("tid");
 		        String json   = rs.getString("json");
 		        Tweet tweet = new Tweet(tid, json);
+		        if(tid.longValue() == 31185709){
+		        	lastLine = true;
+		        }
 		        boolean key = checkTweet(tweet);
-		        
+
 		        if(key){
 		        	insert(tweet);
 		        	countOK++;
@@ -95,7 +103,7 @@ public class JDBCExample {
 		      	
 		      	if(countStep == countOK){
 		      		countStep = countStep + 1000000;
-		      		System.out.println("CountOK esta em: " + countOK);
+		      		System.out.println("CountOK esta em: " + countOK + " -- CountFAIL esta em: " + countFail);
 		      		
 		      	}
 		      	
@@ -130,9 +138,6 @@ public class JDBCExample {
 		
 	}
 	
-	public static void openFile() throws FileNotFoundException, UnsupportedEncodingException{
-		writer = new PrintWriter("the-file-name.txt", "UTF-8");
-	}
 		
 }
 
