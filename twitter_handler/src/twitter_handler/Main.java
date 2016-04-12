@@ -201,7 +201,7 @@ public class Main {
 				connection.setAutoCommit(false);
 		
 		Statement st = connection.createStatement();
-		ResultSet rs = st.executeQuery("select * from geo_tweets where tid between " + step1 + " and " + step2 + " order by tid");
+		ResultSet rs = st.executeQuery("select tid, user_id from geo_tweets where tid between " + step1 + " and " + step2 + " order by tid");
 		List<UniqueUser> list = new ArrayList<UniqueUser>();
 		 while ( rs.next() )
 	      {
