@@ -86,9 +86,13 @@ public class SelectGeoRefTweets {
 		        if(tid.longValue() == 31185709){
 		        	lastLine = true;
 		        }
-		        boolean key = checkTweet(tweet);
+		        boolean haveCoords = checkTweet(tweet);
+		        
+		        
+		       
+		        
 
-		        if(key){
+		        if(haveCoords){
 		        	String[] coords = extractCoords(tweet);
 			        Long user_id = extractUserId(tweet);
 			        String text = extractMessage(tweet);
@@ -98,8 +102,11 @@ public class SelectGeoRefTweets {
 			        tweet.setUser_id(user_id);
 			        tweet.setMessage(text);
 			        tweet.setDate(date);
-		        	insert(tweet);
-		        	countOK++;
+			        boolean insideGeom = isInsideGeom(tweet);
+			        if(insideGeom){
+			        	insert(tweet);
+			        	countOK++;
+			        }
 		        	
 		        }
 		      }
@@ -120,6 +127,21 @@ public class SelectGeoRefTweets {
 		}
 		System.out.println("Total aceito:" + countOK + "---- Total de erros: " + countFail);
 	}
+
+	private static boolean isInsideGeom(Tweet tweet) throws SQLException {
+		Statement stmt = connection.createStatement();
+		boolean result = false;
+		String sql = "SELECT code FROM social_data WHERE st_contains(social_data.geom, ST_SetSRID(ST_MakePoint("
+				+ tweet.getLongitude() + ", " + tweet.getLatitude() + "), 4326)) = TRUE";
+		ResultSet rs = stmt.executeQuery(sql);
+		if (rs.next()) {
+			result = true;
+		}
+		stmt.close();
+		rs.close();
+		return result;
+	}
+
 
 	private static boolean checkTweet(Tweet tweet) {
 		try {
