@@ -87,11 +87,7 @@ public class SelectGeoRefTweets {
 		        	lastLine = true;
 		        }
 		        boolean haveCoords = checkTweet(tweet);
-		        
-		        
-		       
-		        
-
+		 
 		        if(haveCoords){
 		        	String[] coords = extractCoords(tweet);
 			        Long user_id = extractUserId(tweet);
